@@ -1,0 +1,41 @@
+{
+  "name": "lottie2img",
+  "version": "0.1.0",
+  "description": "Convert lottie/tgs file to animated webp",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npm-run-all -s build:*",
+    "build:core-mt": "xmake config -m release --thread=mult -y; xmake",
+    "build:core-st": "xmake config -m release --thread=single -y; xmake",
+    "build:wrapper": "tsup",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DreamOfIce/lottie2img-wasm.git"
+  },
+  "keywords": [
+    "lottie",
+    "tgs",
+    "wasm",
+    "webassembly"
+  ],
+  "author": "冰雪殇璃陌梦 <admin@dreamofice.cn> (https://www.dreamofice.cn)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DreamOfIce/lottie2img-wasm/issues"
+  },
+  "homepage": "https://github.com/DreamOfIce/lottie2img-wasm#readme",
+  "devDependencies": {
+    "@tsconfig/node-lts-strictest-esm": "^18.12.1",
+    "@types/emscripten": "^1.39.6",
+    "@types/node": "^18.11.18",
+    "@typescript-eslint/eslint-plugin": "^5.48.1",
+    "@typescript-eslint/parser": "^5.48.1",
+    "eslint": "^8.31.0",
+    "eslint-config-prettier": "^8.6.0",
+    "npm-run-all": "^4.1.5",
+    "tsup": "^6.5.0",
+    "typescript": "^4.9.4"
+  }
+}

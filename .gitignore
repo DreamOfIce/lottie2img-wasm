@@ -102,3 +102,13 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Xmake cache
+.xmake
+build
+
+# MacOS Cache
+.DS_Store
+
+# VSCode
+.vscode/compile_commands.json

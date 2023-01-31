@@ -1,0 +1,12 @@
+{
+    "extends": "@tsconfig/node-lts-strictest-esm/tsconfig.json",
+    "include": [
+        "example/**/*.mts",
+        "src/**/*.ts",
+        "test/**/*.mts",
+        "tsup.config.ts"
+    ],
+    "compilerOptions": {
+        "resolveJsonModule": true
+    }
+}
