@@ -66,7 +66,7 @@ do
     add_files("core/third_party/rlottie/src/vector/**.cpp")
 
     add_includedirs("core/third_party/rlottie/src/vector")
-    --add_includedirs("core/third_party/rlottie/src/vector/freetype")
+    add_includedirs("core/third_party/rlottie/src/vector/freetype")
     add_includedirs("core/third_party/rlottie/src/vector/pixman")
     add_includedirs("core/third_party/rlottie/src/vector/stb")
     add_includedirs("core/third_party/rlottie/inc", {
