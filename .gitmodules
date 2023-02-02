@@ -5,4 +5,4 @@
 [submodule "core/third_party/libwebp"]
 	path = core/third_party/libwebp
 	url = http://github.com/webmproject/libwebp
-	branch = v1.2.4
+	branch = v1.3.0
