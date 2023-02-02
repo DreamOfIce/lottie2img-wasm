@@ -7,6 +7,7 @@
     "build": "npm-run-all -s build:*",
     "build:core-mt": "xmake config -m release --thread=mult -y; xmake",
     "build:core-st": "xmake config -m release --thread=single -y; xmake",
+    "build:example": "cd example && tsup",
     "build:wrapper": "tsup",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

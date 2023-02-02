@@ -1,30 +1,75 @@
-import { readFile, writeFile } from "fs/promises";
+import { access, readFile, writeFile } from "fs/promises";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import Lottie2img from "../../dist/index.js";
+import Lottie2img from "../../dist/index.mjs";
 import type { PathLike } from "fs";
+import type { lottie2imgOptions } from "../../src/utils/types.js";
 
-const resourceDir = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "resource"
-);
-const outputDir = join(dirname(fileURLToPath(import.meta.url)), "..", "output");
-const defaultFiles: Array<[PathLike, PathLike]> = [
-  [join(resourceDir, "1.tgs"), join(outputDir, "1.webp")],
-  [join(resourceDir, "2.tgs"), join(outputDir, "2.webp")],
+type convertOptions = Array<[PathLike, PathLike, lottie2imgOptions]>;
+const currentDir = dirname(fileURLToPath(import.meta.url));
+const resourceDir = join(currentDir, "..", "..", "resource");
+const outputDir = join(currentDir, "..", "output");
+const defaultFiles: convertOptions = [
+  [join(resourceDir, "cherry.tgs"), join(outputDir, "cherry.webp"), {}],
+  [join(resourceDir, "duck.tgs"), join(outputDir, "duck.webp"), {}],
+  [join(resourceDir, "confetti.json"), join(outputDir, "confetti.webp"), {}],
+  [join(resourceDir, "gradient.json"), join(outputDir, "gradient.webp"), {}],
 ];
 
 // parse arguments
 const args = process.argv.slice(2);
-if (args.includes("-v") || args.includes("--version")) {
+if (args.length === 0) {
+  console.log("No argument specified, using sample resources!");
+  await convert(defaultFiles);
+} else if (args.includes("-v") || args.includes("--version")) {
   await printVersion();
 } else if (args.includes("-h") || args.includes("--help")) {
   printHelp();
 } else {
-  await convert(defaultFiles);
+  let inputPos = args.indexOf("-i");
+  if (inputPos === -1) {
+    console.error("No input file specified");
+    process.exit(1);
+  }
+  const globalOptions = parseOptions(args.slice(0, inputPos));
+  const files: convertOptions = [];
+  do {
+    const nextInputPos = args.indexOf("-i", inputPos + 1);
+    const fileArgs = args.slice(
+      inputPos,
+      nextInputPos === -1 ? args.length : nextInputPos
+    );
+
+    const inputPath = fileArgs[1] as string;
+    try {
+      await access(inputPath);
+    } catch (err) {
+      if (err instanceof Error)
+        console.error(`Failed to open input file ${inputPath}: ${err.message}`);
+    }
+    const outputPos = fileArgs.indexOf("-o");
+    const outputPath = fileArgs[outputPos + 1] as string;
+    if (outputPos === -1 || !outputPath) {
+      console.error(`No output file specified for input ${inputPath}`);
+      process.exit(1);
+    }
+    files.push([
+      inputPath,
+      outputPath,
+      {
+        ...globalOptions,
+        ...parseOptions(
+          fileArgs
+            .filter((_v, i) => i !== outputPos && i !== outputPos + 1)
+            .slice(2) // remove -i and -o from arguments
+        ),
+      },
+    ]);
+    inputPos = nextInputPos;
+  } while (inputPos !== -1);
+  console.log(files);
+  await convert(files);
 }
-process.exit(0);
 
 /**
  * Print help information
@@ -41,6 +86,7 @@ function printHelp(): void {
 
   console.log("Convert options:");
 }
+
 /**
  * Print lottie2img version
  */
@@ -57,19 +103,57 @@ async function printVersion(): Promise<void> {
  * @param {Array<[PathLike, PathLike]>} fileList list of paths to input and output files
  * @returns Promise<void>
  */
-async function convert(fileList: Array<[PathLike, PathLike]>): Promise<void> {
-  const lottie2img = await Lottie2img.create({ log: true });
-  console.log("Version:", lottie2img.version);
-  await Promise.all(
-    fileList.map(async ([input, output]): Promise<void> => {
-      console.log("Reading input file %s.", input);
-      const inputData = await readFile(input);
-      console.log("Start converting...");
-      const result = lottie2img.convert(inputData);
-      console.log("Writting result to %s.", output);
-      await writeFile(output, result);
-      console.log("Done.");
-    })
-  );
+async function convert(fileList: convertOptions): Promise<void> {
+  const lottie2img = await Lottie2img.create({
+    log: true,
+  });
+  for (const [input, output, options] of fileList) {
+    console.log("Reading input file %s.", input);
+    const inputData = await readFile(input);
+    console.log("Start converting...");
+    const result = lottie2img.convert(inputData, options);
+    console.log("Writting result to %s.", output);
+    await writeFile(output, result);
+    console.log("Done.");
+  }
   lottie2img.destory();
+}
+
+function parseValue(value: string): number | boolean | string {
+  return Number.isNaN(Number(value))
+    ? Number(value)
+    : value === "true"
+    ? true
+    : value === "false"
+    ? false
+    : value;
+}
+
+function parseOptions(args: Array<string>): lottie2imgOptions {
+  const validFields = [
+    "format",
+    "frame-rate",
+    "height",
+    "width",
+    "loop",
+    "background-color",
+    "minimize-size",
+    "quality",
+    "level",
+  ];
+  const options: lottie2imgOptions = {};
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i] as string;
+    if (arg.startsWith("--") && validFields.includes(arg.slice(2))) {
+      Object.assign(options, {
+        [arg
+          .slice(2)
+          .replace(/-([a-z])/gi, (m) => m.substring(1).toUpperCase())]:
+          parseValue(args[++i] ?? ""),
+      });
+    } else {
+      throw new Error(`Unknown option ${arg}`);
+    }
+  }
+  return options;
 }
