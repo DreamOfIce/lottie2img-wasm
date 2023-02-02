@@ -2,6 +2,7 @@ type lottie2imgLogger = (level: "info" | "error", message: string) => void;
 
 interface lottie2imgCore extends EmscriptenModule {
   ccall: typeof ccall;
+  cwrap: typeof cwrap;
   exit(code: number): void;
   AsciiToString(ptr: number): string;
   getValue: typeof getValue;

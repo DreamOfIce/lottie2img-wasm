@@ -17,9 +17,8 @@ bool isGzip(uint8_t *input, size_t inputLength)
 
 string decompressGzip(uint8_t *input, size_t inputLength)
 {
-
   string result;
-  const size_t bufferLength = inputLength * 2 < 131072l ? 131072l : inputLength; // min buufer size 128k
+  const size_t bufferLength = inputLength * 2 < 131072l ? 131072l : inputLength * 2; // min buufer size 128k
   std::unique_ptr<uint8_t> buffer(new uint8_t[bufferLength]);
 
   z_stream zs;
@@ -27,11 +26,11 @@ string decompressGzip(uint8_t *input, size_t inputLength)
   zs.zfree = Z_NULL;
   zs.opaque = Z_NULL;
   zs.next_in = input;
-  zs.avail_in = 0;
+  zs.avail_in = inputLength;
   zs.next_out = buffer.get();
   zs.avail_out = bufferLength;
 
-  inflateInit(&zs);
+  inflateInit2(&zs, MAX_WBITS | 16); // enable gzip
 
   // decompress
   int code;
@@ -40,10 +39,12 @@ string decompressGzip(uint8_t *input, size_t inputLength)
     code = inflate(&zs, Z_NO_FLUSH);
     if (code != Z_OK && code != Z_STREAM_END)
     {
-      cerr << "Could not decompress the lottie file: " << *zs.msg << '(' << code << ")." << endl;
-      throw "zlib failed with " + to_string(*zs.msg);
+      cerr << "Could not decompress the lottie file: " << zs.msg << '(' << code << ")." << endl;
+      throw runtime_error("zlib failed with " + string(zs.msg));
     }
-    result += *buffer;
+    result += string((char *)buffer.get(), bufferLength - zs.avail_out);
+    zs.next_out = buffer.get();
+    zs.avail_out = bufferLength;
   } while (code != Z_STREAM_END);
 
   inflateEnd(&zs);

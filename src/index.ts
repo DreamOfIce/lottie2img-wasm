@@ -34,9 +34,21 @@ class Lottie2img {
       wrapper: version,
       ...JSON.parse(this.#core.AsciiToString(versionPtr)),
     } as lottie2imgVersion;
+    this.#callConvert = this.#core.cwrap("convert", "number", [
+      "string",
+      "number",
+      "number",
+      "number",
+    ]);
   }
 
   #core: lottie2imgCore;
+  #callConvert: (
+    args: string,
+    inputPointer: number,
+    inputLength: number,
+    outputLengthPointer: number
+  ) => number;
   #destoryed = false;
   #enableLog: boolean;
   #logger: lottie2imgLogger;
@@ -69,11 +81,11 @@ class Lottie2img {
         const optstr = Object.entries(options)
           .map(([key, value]) => `${key}=${value as string}`)
           .join(";");
-        outputPtr = this.#core.ccall(
-          "convert",
-          "number",
-          ["string", "number", "number", "number"],
-          [optstr, inputPtr, inputLength, outputLengthPtr]
+        outputPtr = this.#callConvert(
+          optstr,
+          inputPtr,
+          inputLength,
+          outputLengthPtr
         );
         const outputLength = this.#core.getValue(outputLengthPtr, "i32");
         const result = this.#core.HEAPU8.subarray(

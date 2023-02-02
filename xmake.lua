@@ -19,7 +19,7 @@ do
     else
         add_defines("HAVE_PTHREAD", "WEBP_USE_THREAD")
         add_cxflags("-pthread")
-        add_ldflags("-pthread", "-sINITIAL_MEMORY=134217728") -- 128MB
+        add_ldflags("-pthread", "-sINITIAL_MEMORY=1073741824") -- 1GB
     end
 end
 option_end()
@@ -83,7 +83,7 @@ do
     add_packages("zlib")
     add_ldflags("--post-js core/js/post.js", "-sEXIT_RUNTIME", "-sMODULARIZE", "-sEXPORT_NAME=createLottie2imgCore",
         "-sEXPORTED_FUNCTIONS=[_main,_convert,_version,_malloc,_free]",
-        "-sEXPORTED_RUNTIME_METHODS=[ccall,getValue,AsciiToString]")
+        "-sEXPORTED_RUNTIME_METHODS=[ccall,cwrap,getValue,AsciiToString]")
     if (is_config("thread", "single")) then
         set_filename("output/single-thread.js")
     else

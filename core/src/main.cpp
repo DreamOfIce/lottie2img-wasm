@@ -27,7 +27,6 @@ extern "C" uint8_t *convert(char *args, uint8_t *input, size_t inputLength, size
   {
     json = string((const char *)input, inputLength);
   }
-  cout << "Start rendering..." << endl;
   return render(&json, &options, outputLength);
 }
 
