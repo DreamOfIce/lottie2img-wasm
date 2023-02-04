@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <iostream>
 
 using namespace std;
 
@@ -54,22 +55,27 @@ string decompressGzip(uint8_t *input, size_t inputLength)
 renderOptions parseArg(string argstr)
 {
   renderOptions options;
+  if (argstr.length() == 0)
+    return options;
+  else if (argstr.back() != ';')
+    argstr.push_back(';');
   int pos = argstr.find(";", 0);
   while (pos != string::npos)
   {
-    string arg = argstr.substr(0, pos);
-    int pos = arg.find('=');
-    if (pos == string::npos)
+    string arg;
+    arg = argstr.substr(0, pos);
+    int eqPos = arg.find('=');
+    if (eqPos == string::npos)
     {
+      cerr << "Bad argument: " << arg << endl;
       throw "Bad argument: " + arg;
     }
-    string key = arg.substr(0, pos - 1);
-    string value = arg.substr(pos);
+    string key = arg.substr(0, eqPos);
+    string value = arg.substr(eqPos + 1);
     argstr.erase(0, pos + 1);
-    cout << key << ":" << value << endl;
     if (key == "format")
     {
-      options.format = value;
+      options.format = (outputFormat)stoi(value);
     }
     else if (key == "frameRate")
     {
@@ -107,7 +113,7 @@ renderOptions parseArg(string argstr)
     {
       cerr << "[Warning] Unknow argument: " << arg << ", ignored." << endl;
     }
-    argstr.find(";", pos);
+    pos = argstr.find(';');
   }
   return options;
 }
