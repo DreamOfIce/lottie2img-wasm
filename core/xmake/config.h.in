@@ -1,8 +1,5 @@
-/* versions */
-#define PROJECT_VERSION "${VERSION}"
-#define RLOTTIE_VERSION "${RLOTTIE_VERSION}"
-
 /* rlottie */
+#define RLOTTIE_VERSION "${RLOTTIE_VERSION}"
 ${define LOTTIE_MODULE}
 
 #ifdef LOTTIE_MODULE
@@ -24,4 +21,5 @@ ${define LOTTIE_CACHE}
 #endif
 
 /* lottie2img */
-#define MULT_THREAD ${default MULT_THREAD 0}
+#define LOTTIE2IMG_VERSION "${VERSION}"
+#define LOTTIE2IMG_MULT_THREAD ${default LOTTIE2IMG_MULT_THREAD false}

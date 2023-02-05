@@ -4,9 +4,12 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/build"
+                "${workspaceFolder}/build",
+                "${EMSDK}/upstream/emscripten/system/include"
             ],
-            "defines": [],
+            "defines": [
+                "__EMSCRIPTEN__"
+            ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",
             "cppStandard": "c++14",

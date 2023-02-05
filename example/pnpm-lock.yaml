@@ -1,0 +1,7 @@
+lockfileVersion: 5.4
+
+specifiers:
+  lottie2img: link:..
+
+devDependencies:
+  lottie2img: link:..

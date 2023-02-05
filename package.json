@@ -1,8 +1,23 @@
 {
   "name": "lottie2img",
   "version": "0.1.0",
-  "description": "Convert lottie/tgs file to animated webp",
+  "description": "Convert lottie/tgs file to animated images(webp/gif)",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=16"
+  },
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "npm-run-all -s build:*",
     "build:core-mt": "xmake config -m release --thread=mult -y; xmake",
@@ -18,6 +33,7 @@
   "keywords": [
     "lottie",
     "tgs",
+    "webp",
     "wasm",
     "webassembly"
   ],

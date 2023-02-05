@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["node/cli.mts"],
-  external: [/dist\/.+/],
+  entry: { lottie2img: "node/cli.mts" },
+  external: ["lottie2img"],
   format: ["esm"],
 });

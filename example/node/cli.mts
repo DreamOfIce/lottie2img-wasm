@@ -1,15 +1,18 @@
+#!/usr/bin/env node
 import { access, readFile, writeFile } from "fs/promises";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-import Lottie2img from "../../dist/index.mjs";
-import type { PathLike } from "fs";
-import type { lottie2imgOptions } from "../../src/utils/types.js";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import Lottie2img from "lottie2img";
+import type { PathLike } from "node:fs";
 
 type convertOptions = Array<[PathLike, PathLike, lottie2imgOptions]>;
+type lottie2imgOptions = NonNullable<Parameters<Lottie2img["convert"]>[1]>;
+type lottie2imgOutputFormats = lottie2imgOptions["format"];
+
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const resourceDir = join(currentDir, "..", "..", "resource");
 const outputDir = join(currentDir, "..", "output");
-const defaultFiles: convertOptions = [
+const exampleFiles: convertOptions = [
   [join(resourceDir, "cherry.tgs"), join(outputDir, "cherry.webp"), {}],
   [join(resourceDir, "duck.tgs"), join(outputDir, "duck.webp"), {}],
   [join(resourceDir, "confetti.json"), join(outputDir, "confetti.webp"), {}],
@@ -20,7 +23,7 @@ const defaultFiles: convertOptions = [
 const args = process.argv.slice(2);
 if (args.length === 0) {
   console.log("No argument specified, using sample resources!");
-  await convert(defaultFiles);
+  await convert(exampleFiles);
 } else if (args.includes("-v") || args.includes("--version")) {
   await printVersion();
 } else if (args.includes("-h") || args.includes("--help")) {
@@ -58,16 +61,11 @@ if (args.length === 0) {
       outputPath,
       {
         ...globalOptions,
-        ...parseOptions(
-          fileArgs
-            .filter((_v, i) => i !== outputPos && i !== outputPos + 1)
-            .slice(2) // remove -i and -o from arguments
-        ),
+        ...parseOptions(fileArgs),
       },
     ]);
     inputPos = nextInputPos;
   } while (inputPos !== -1);
-  console.log(files);
   await convert(files);
 }
 
@@ -85,6 +83,25 @@ function printHelp(): void {
   console.log("  -v  --version    print version in and exit.");
 
   console.log("Convert options:");
+  console.log("  --format [webp]            output format");
+  console.log("  --frame-rate [int]         frames per second");
+  console.log("  --height [int]             height of output image");
+  console.log("  --width [int]              width of output image");
+  console.log(
+    "  --loop [int]               number of times to repeat the animation (0 = infinite)"
+  );
+  console.log(
+    "  --background-color [RGBA]  background color with alpha in RGBA format"
+  );
+  console.log(
+    "  --minimize-size [boo]      sacrifice time for the smallest possible output"
+  );
+  console.log(
+    "  --quality [double(0-100)]  output quality (0 gives the smallest size and 100 the largest)"
+  );
+  console.log(
+    "  --level [int(0~6)]         quality/speed trade-off (0=fast, 6=slower-better)"
+  );
 }
 
 /**
@@ -120,7 +137,7 @@ async function convert(fileList: convertOptions): Promise<void> {
 }
 
 function parseValue(value: string): number | boolean | string {
-  return Number.isNaN(Number(value))
+  return !Number.isNaN(Number(value))
     ? Number(value)
     : value === "true"
     ? true
@@ -141,16 +158,37 @@ function parseOptions(args: Array<string>): lottie2imgOptions {
     "quality",
     "level",
   ];
+  const ignoreFields = ["-i", "-o"];
+
   const options: lottie2imgOptions = {};
   for (let i = 0; i < args.length; i++) {
     const arg = args[i] as string;
     if (arg.startsWith("--") && validFields.includes(arg.slice(2))) {
-      Object.assign(options, {
-        [arg
-          .slice(2)
-          .replace(/-([a-z])/gi, (m) => m.substring(1).toUpperCase())]:
-          parseValue(args[++i] ?? ""),
-      });
+      const valueStr = args[++i];
+      if (!valueStr) {
+        console.error(`Missing value for option ${arg}`);
+        process.exit(1);
+      }
+      const key = arg
+        .slice(2)
+        .replace(/-([a-z])/gi, (m) => m.substring(1).toUpperCase());
+      const value = parseValue(valueStr);
+      if (key == "format" && typeof value === "string") {
+        const format = (
+          Lottie2img.format as unknown as Record<
+            string,
+            lottie2imgOutputFormats
+          >
+        )[value];
+        if (!format) throw new Error(`Unsupport output format :${value}`);
+        options.format = format;
+      } else {
+        Object.assign(options, {
+          [key]: value,
+        });
+      }
+    } else if (ignoreFields.includes(arg)) {
+      ++i;
     } else {
       throw new Error(`Unknown option ${arg}`);
     }

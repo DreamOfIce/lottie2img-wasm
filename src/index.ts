@@ -4,13 +4,16 @@ import type {
   lottie2imgCore,
   lottie2imgLogger,
   lottie2imgInitOptions,
-  lottie2imgVersion,
   lottie2imgOptions,
+  lottie2imgVersion,
 } from "./utils/types.js";
+import { lottie2imgOutputFormats } from "./utils/types.js";
 
 class Lottie2img {
   /**
-   * @i
+   * Don't use this constructor direct, use Lottie2img.create() instead!
+   * @private
+   * @see {@link create}
    */
   private constructor(
     core: lottie2imgCore,
@@ -19,29 +22,20 @@ class Lottie2img {
     this.#core = core;
     this.#enableLog = options.log;
     this.#logger = options.logger;
-    // apply logger
-    Object.assign(this.#core, {
-      print: (message: string) => {
-        if (this.#enableLog) this.#logger("info", message);
-      },
-      printErr: (message: string) => {
-        if (this.#enableLog) this.#logger("error", message);
-      },
-    });
-    // get versions
-    const versionPtr = this.#core.ccall("version", "number", [], []);
-    this.version = {
-      wrapper: version,
-      ...JSON.parse(this.#core.AsciiToString(versionPtr)),
-    } as lottie2imgVersion;
+
+    // init properties
     this.#callConvert = this.#core.cwrap("convert", "number", [
       "string",
       "number",
       "number",
       "number",
     ]);
+    const versionPtr = this.#core.ccall("version", "number", [], []);
+    this.version = {
+      wrapper: version,
+      ...JSON.parse(this.#core.AsciiToString(versionPtr)),
+    } as lottie2imgVersion;
   }
-
   #core: lottie2imgCore;
   #callConvert: (
     args: string,
@@ -50,9 +44,10 @@ class Lottie2img {
     outputLengthPointer: number
   ) => number;
   #destoryed = false;
-  #enableLog: boolean;
+  #enableLog;
   #logger: lottie2imgLogger;
   version: lottie2imgVersion;
+  static format = lottie2imgOutputFormats;
 
   /**
    * Create a new Lottie2img instance
@@ -64,12 +59,33 @@ class Lottie2img {
     const coreOptions = {
       noExitRuntime: true,
     };
+    if (options.log) {
+      Object.assign(coreOptions, {
+        print: (message: string) => options.logger("info", message),
+        printErr: (message: string) => options.logger("error", message),
+      });
+    } else {
+      Object.assign(coreOptions, {
+        print: () => {
+          // do nothing
+        },
+        printErr: () => {
+          // do nothing
+        },
+      });
+    }
     const { default: createCore } = (await import(options.core)) as {
       default: (options: Partial<EmscriptenModule>) => Promise<lottie2imgCore>;
     };
     return new Lottie2img(await createCore(coreOptions), options);
   }
 
+  /**
+   * Convert Lottie to an image. Note that you cannot call this function after calling distory()
+   * @param input Uint8 Array containing lottie datas, support lottie and tgs(gziped) format
+   * @param options convert options
+   * @returns Uint8 Array containin the image
+   */
   convert(input: Uint8Array, options: lottie2imgOptions = {}): Uint8Array {
     if (!this.#destoryed) {
       let inputPtr, outputPtr, outputLengthPtr;
@@ -79,6 +95,7 @@ class Lottie2img {
         outputLengthPtr = this.#core._malloc(4); // int
         this.#core.HEAPU8.set(input, inputPtr);
         const optstr = Object.entries(options)
+          .filter(([, value]) => value !== undefined)
           .map(([key, value]) => `${key}=${value as string}`)
           .join(";");
         outputPtr = this.#callConvert(
@@ -94,7 +111,8 @@ class Lottie2img {
         );
         return result;
       } catch (err) {
-        if (err instanceof Error) this.#logger("error", err.message);
+        if (err instanceof Error && this.#enableLog)
+          this.#logger("error", err.message);
         throw err;
       } finally {
         // Ensure that requested memory is freed
@@ -106,14 +124,12 @@ class Lottie2img {
       throw new Error("Cannot be called after destory!");
     }
   }
-
+  /**
+   * Destroy wasm instances and free memory
+   */
   destory(): void {
     this.#core.exit(0);
     this.#destoryed = true;
-  }
-
-  setLogger(logger: lottie2imgLogger): void {
-    this.#logger = logger;
   }
 }
 

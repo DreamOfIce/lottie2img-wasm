@@ -10,7 +10,9 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-  cout << "lottie2img-core v" << PROJECT_VERSION << endl;
+  cout << "lottie2img-core v" << LOTTIE2IMG_VERSION << endl;
+  cout << "mult thread: " << boolalpha << LOTTIE2IMG_MULT_THREAD << noboolalpha << endl;
+  cout << endl;
   return 0;
 }
 
@@ -39,7 +41,7 @@ extern "C" const char *version()
   if (json.empty())
   {
     json += '{';
-    json = json + "\"core\":\"" + PROJECT_VERSION + "\",";
+    json = json + "\"core\":\"" + LOTTIE2IMG_VERSION + "\",";
     json = json + "\"emscripten\":\"" + __VERSION__ + "\",";
     json = json + "\"libwebp\":\"" + convertVersion(WebPGetEncoderVersion()) + "\",";
     json = json + "\"rlottie\":\"" + RLOTTIE_VERSION + "\",";

@@ -37,7 +37,7 @@ end
 -- generate config.h
 add_configfiles("core/xmake/config.h.in")
 add_includedirs("$(buildir)")
-set_configvar("MULT_THREAD", get_config("thread") == "mult")
+set_configvar("LOTTIE2IMG_MULT_THREAD", get_config("thread") == "mult")
 
 set_configvar("RLOTTIE_VERSION", "0.2.0")
 set_configvar("LOTTIE_CACHE", 0)
@@ -81,8 +81,9 @@ do
     add_files("core/src/**.cpp")
     add_deps("libwebp", "rlottie")
     add_packages("zlib")
-    add_ldflags("--post-js core/js/post.js", "-sEXIT_RUNTIME", "-sMODULARIZE", "-sEXPORT_NAME=createLottie2imgCore",
-        "-sEXPORTED_FUNCTIONS=[_main,_convert,_version,_malloc,_free]",
+    add_links("embind")
+    add_ldflags("--post-js core/js/post.js", "-sEXIT_RUNTIME", "-sMODULARIZE",
+        "-sEXPORT_NAME=createLottie2imgCore", "-sEXPORTED_FUNCTIONS=[_main,_convert,_version,_malloc,_free]",
         "-sEXPORTED_RUNTIME_METHODS=[ccall,cwrap,getValue,AsciiToString]")
     if (is_config("thread", "single")) then
         set_filename("output/single-thread.js")
