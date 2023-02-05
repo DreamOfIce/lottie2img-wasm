@@ -105,9 +105,8 @@ class Lottie2img {
           outputLengthPtr
         );
         const outputLength = this.#core.getValue(outputLengthPtr, "i32");
-        const result = this.#core.HEAPU8.subarray(
-          outputPtr,
-          outputPtr + outputLength
+        const result = new Uint8Array(
+          this.#core.HEAPU8.subarray(outputPtr, outputPtr + outputLength)
         );
         return result;
       } catch (err) {

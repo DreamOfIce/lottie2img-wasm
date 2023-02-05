@@ -172,21 +172,22 @@ function parseOptions(args: Array<string>): lottie2imgOptions {
       const key = arg
         .slice(2)
         .replace(/-([a-z])/gi, (m) => m.substring(1).toUpperCase());
-      const value = parseValue(valueStr);
+      let value;
       if (key == "format" && typeof value === "string") {
         const format = (
           Lottie2img.format as unknown as Record<
             string,
             lottie2imgOutputFormats
           >
-        )[value];
+        )[valueStr.toUpperCase()];
         if (!format) throw new Error(`Unsupport output format :${value}`);
         options.format = format;
       } else {
-        Object.assign(options, {
-          [key]: value,
-        });
+        value = parseValue(valueStr);
       }
+      Object.assign(options, {
+        [key]: value,
+      });
     } else if (ignoreFields.includes(arg)) {
       ++i;
     } else {

@@ -77,7 +77,7 @@ uint8_t *render(std::string *lottieJson, renderOptions *options, size_t *outputL
   switch (options->format)
   {
   case FORMAT_WEBP:
-    encoder = std::unique_ptr<Lottie2imgEncoder>(new Lottie2imgWebPEncoder(options, imgHeight, imgWidth, duration));
+    encoder = std::unique_ptr<Lottie2imgEncoder>(new Lottie2imgWebPEncoder(options, imgWidth, imgHeight, duration));
     break;
   default:
     std::cerr << "Unknown output format " << options->format << std::endl;
