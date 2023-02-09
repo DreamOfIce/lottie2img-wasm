@@ -4,9 +4,11 @@ interface lottie2imgCore extends EmscriptenModule {
   ccall: typeof ccall;
   cwrap: typeof cwrap;
   exit(code: number): void;
+  addFunction: typeof addFunction;
   AsciiToString(ptr: number): string;
   getValue: typeof getValue;
   setValue: typeof setValue;
+  haveAsync: boolean;
   outputFormat: lottie2imgOutputFormats;
 }
 

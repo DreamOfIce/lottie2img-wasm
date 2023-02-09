@@ -91,7 +91,7 @@ function printHelp(): void {
     "  --loop [int]               number of times to repeat the animation (0 = infinite)"
   );
   console.log(
-    "  --background-color [RGBA]  background color with alpha in RGBA format"
+    "  --background-color [RGBA]  background color with alpha in RGBA format(e.g. 0xffffff)"
   );
   console.log(
     "  --minimize-size [boo]      sacrifice time for the smallest possible output"
@@ -112,7 +112,7 @@ async function printVersion(): Promise<void> {
   console.log("Lottie2WebP example CLI");
   console.log("Type help for help");
   console.log(JSON.stringify(lottie2img.version, null, 2));
-  lottie2img.destory();
+  lottie2img.destroy();
 }
 
 /**
@@ -124,16 +124,18 @@ async function convert(fileList: convertOptions): Promise<void> {
   const lottie2img = await Lottie2img.create({
     log: true,
   });
-  for (const [input, output, options] of fileList) {
-    console.log("Reading input file %s.", input);
-    const inputData = await readFile(input);
-    console.log("Start converting...");
-    const result = lottie2img.convert(inputData, options);
-    console.log("Writting result to %s.", output);
-    await writeFile(output, result);
-    console.log("Done.");
-  }
-  lottie2img.destory();
+  await Promise.all(
+    fileList.map(async ([input, output, options]) => {
+      console.log("Reading input file %s.", input);
+      const inputData = await readFile(input);
+      console.log("Start converting...");
+      const result = await lottie2img.convert(inputData, options);
+      console.log("Writting result to %s.", output);
+      await writeFile(output, result);
+      console.log("Done.");
+    })
+  );
+  lottie2img.destroy();
 }
 
 function parseValue(value: string): number | boolean | string {

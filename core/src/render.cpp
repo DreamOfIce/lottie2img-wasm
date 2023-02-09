@@ -8,23 +8,6 @@
 #include "webp/encode.h"
 #include "webp/mux.h"
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten/bind.h>
-#endif
-
-/*
-  Binding for JavaScript
-*/
-#ifdef __EMSCRIPTEN__
-EMSCRIPTEN_BINDINGS(lottie2img)
-{
-  emscripten::enum_<outputFormat>("outputFormat")
-      .value("webp", FORMAT_WEBP)
-      //.value("gif", FORMAT_GIF)
-      ;
-}
-#endif
-
 uint8_t *render(std::string *lottieJson, renderOptions *options, size_t *outputLength)
 {
   std::cout << "Initializing rlottie..." << std::endl;

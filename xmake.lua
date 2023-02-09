@@ -19,7 +19,7 @@ do
     else
         add_defines("HAVE_PTHREAD", "WEBP_USE_THREAD")
         add_cxflags("-pthread")
-        add_ldflags("-pthread", "-sINITIAL_MEMORY=1073741824") -- 1GB
+        add_ldflags("-pthread", "-sINITIAL_MEMORY=1073741824", "-sALLOW_TABLE_GROWTH") -- 1GB
     end
 end
 option_end()
@@ -27,7 +27,8 @@ option_end()
 -- keep assertions and disable optimisation in debug mode
 if is_mode("debug") then
     add_cxflags("-O0", "-g")
-    add_ldflags("-O0", "-g", "-sASSERTIONS", "-sNO_DISABLE_EXCEPTION_CATCHING")
+    add_ldflags("-O0", "-g", "-sASSERTIONS", "-sNO_DISABLE_EXCEPTION_CATCHING",
+        "-Wbad-function-cast -Wcast-function-type")
 else
     add_cxflags("-O3", "--closure=1")
     add_ldflags("-O3", "--closure=1", "-sNO_ASSERTIONS")
@@ -82,12 +83,13 @@ do
     add_deps("libwebp", "rlottie")
     add_packages("zlib")
     add_links("embind")
-    add_ldflags("--post-js core/js/post.js", "-sEXIT_RUNTIME", "-sMODULARIZE",
-        "-sEXPORT_NAME=createLottie2imgCore", "-sEXPORTED_FUNCTIONS=[_main,_convert,_version,_malloc,_free]",
-        "-sEXPORTED_RUNTIME_METHODS=[ccall,cwrap,getValue,AsciiToString]")
+    add_ldflags("--post-js core/js/post.js", "-sEXIT_RUNTIME", "-sMODULARIZE", "-sEXPORT_NAME=createLottie2imgCore",
+        "-sEXPORTED_RUNTIME_METHODS=[addFunction,AsciiToString,ccall,cwrap,getValue]")
     if (is_config("thread", "single")) then
+        add_ldflags("-sEXPORTED_FUNCTIONS=[_main,_free,_convert,_malloc,_version]")
         set_filename("output/single-thread.js")
     else
+        add_ldflags("-sEXPORTED_FUNCTIONS=[_main,_free,_convert,_convertAsync,_malloc,_version]")
         set_filename("output/mult-thread.js")
     end
 

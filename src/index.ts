@@ -20,12 +20,23 @@ class Lottie2img {
     options: Required<lottie2imgInitOptions>
   ) {
     this.#core = core;
-    this.#enableLog = options.log;
-    this.#logger = options.logger;
+    this.#hasAsync = this.#core.haveAsync;
+    this.#logger = options.log
+      ? options.logger
+      : () => {
+          // do nothing
+        };
 
     // init properties
     this.#callConvert = this.#core.cwrap("convert", "number", [
       "string",
+      "number",
+      "number",
+      "number",
+    ]);
+    this.#callConvertAsync = this.#core.cwrap("convertAsync", "boolean", [
+      "string",
+      "number",
       "number",
       "number",
       "number",
@@ -36,18 +47,37 @@ class Lottie2img {
       ...JSON.parse(this.#core.AsciiToString(versionPtr)),
     } as lottie2imgVersion;
   }
+  #destroyed = false;
+  #taskList: Map<symbol, [(value: number) => void, (reason: string) => void]> =
+    new Map();
+  static format = lottie2imgOutputFormats;
+  #callback(handle: symbol, ptr: number): void {
+    const task = this.#taskList.get(handle);
+    if (!task) throw new Error(`Handle ${handle.toString()} does not exisit!`);
+    const [resolve, reject] = task;
+    if (ptr === 0) {
+      reject("Convert failed!");
+    }
+    resolve(ptr);
+  }
+
   #core: lottie2imgCore;
+  #hasAsync: boolean;
+  #logger: lottie2imgLogger;
+  version: lottie2imgVersion;
   #callConvert: (
     args: string,
     inputPointer: number,
     inputLength: number,
     outputLengthPointer: number
   ) => number;
-  #destoryed = false;
-  #enableLog;
-  #logger: lottie2imgLogger;
-  version: lottie2imgVersion;
-  static format = lottie2imgOutputFormats;
+  #callConvertAsync: (
+    args: string,
+    inputPointer: number,
+    inputLength: number,
+    outputLengthPointer: number,
+    callbackPointer: number
+  ) => boolean;
 
   /**
    * Create a new Lottie2img instance
@@ -82,12 +112,86 @@ class Lottie2img {
 
   /**
    * Convert Lottie to an image. Note that you cannot call this function after calling distory()
+   * If the core supports multithread this operation is asynchronous, otherwise it is equivalent to calling convertAsync
    * @param input Uint8 Array containing lottie datas, support lottie and tgs(gziped) format
    * @param options convert options
-   * @returns Uint8 Array containin the image
+   * @returns Promise returned a Uint8 Array containin the image
    */
-  convert(input: Uint8Array, options: lottie2imgOptions = {}): Uint8Array {
-    if (!this.#destoryed) {
+  async convert(
+    input: Uint8Array,
+    options: lottie2imgOptions = {}
+  ): Promise<Uint8Array> {
+    if (this.#destroyed) {
+      throw new Error("Cannot be called after destroy!");
+    } else if (!this.#hasAsync) {
+      this.#logger(
+        "error",
+        "[WARNING] This core does not support async convert,  run sync version instead"
+      );
+      return Promise.resolve(this.convertSync(input, options));
+    }
+    const handle = Symbol("lottie2img convert task");
+    let inputPtr: number | undefined,
+      outputPtr: number | undefined,
+      outputLengthPtr: number | undefined,
+      callbackPtr: number | undefined;
+    try {
+      const inputLength = input.length * input.BYTES_PER_ELEMENT;
+      inputPtr = this.#core._malloc(inputLength);
+      outputLengthPtr = this.#core._malloc(4); // size_t
+      this.#core.HEAPU8.set(input, inputPtr);
+      const optstr = Object.entries(options)
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => `${key}=${value as string}`)
+        .join(";");
+      callbackPtr = this.#core.addFunction(
+        this.#callback.bind(this, handle),
+        "vi"
+      );
+      const convertPromise = new Promise(
+        (
+          resolve: (value: number) => void,
+          reject: (reason: string) => void
+        ) => {
+          this.#taskList.set(handle, [resolve, reject]);
+          const result = this.#callConvertAsync(
+            optstr,
+            inputPtr as number,
+            inputLength,
+            outputLengthPtr as number,
+            callbackPtr as number
+          );
+          if (!result)
+            reject(
+              "Unable to create task, check error log for more information"
+            );
+        }
+      );
+      outputPtr = await convertPromise;
+      const outputLength = this.#core.getValue(outputLengthPtr, "i32");
+      const result = new Uint8Array(
+        this.#core.HEAPU8.subarray(outputPtr, outputPtr + outputLength)
+      );
+      return result;
+    } catch (err) {
+      if (err instanceof Error) this.#logger("error", err.message);
+      throw err;
+    } finally {
+      // Ensure that requested memory is freed
+      if (inputPtr) this.#core._free(inputPtr);
+      if (outputPtr) this.#core._free(outputPtr);
+      if (outputLengthPtr) this.#core._free(outputLengthPtr);
+    }
+  }
+
+  /**
+   * Synchronised version of convert()
+   * @param input Uint8 Array containing lottie datas, support lottie and tgs(gziped) format
+   * @param options convert options
+   * @returns Promise returned a Uint8 Array containin the image
+   */
+  convertSync(input: Uint8Array, options: lottie2imgOptions = {}): Uint8Array {
+    if (!this.#destroyed) {
       let inputPtr, outputPtr, outputLengthPtr;
       try {
         const inputLength = input.length * input.BYTES_PER_ELEMENT;
@@ -110,8 +214,7 @@ class Lottie2img {
         );
         return result;
       } catch (err) {
-        if (err instanceof Error && this.#enableLog)
-          this.#logger("error", err.message);
+        if (err instanceof Error) this.#logger("error", err.message);
         throw err;
       } finally {
         // Ensure that requested memory is freed
@@ -120,15 +223,16 @@ class Lottie2img {
         if (outputLengthPtr) this.#core._free(outputLengthPtr);
       }
     } else {
-      throw new Error("Cannot be called after destory!");
+      throw new Error("Cannot be called after destroy!");
     }
   }
+
   /**
    * Destroy wasm instances and free memory
    */
-  destory(): void {
+  destroy(): void {
     this.#core.exit(0);
-    this.#destoryed = true;
+    this.#destroyed = true;
   }
 }
 

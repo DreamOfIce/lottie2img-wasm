@@ -23,3 +23,6 @@ ${define LOTTIE_CACHE}
 /* lottie2img */
 #define LOTTIE2IMG_VERSION "${VERSION}"
 #define LOTTIE2IMG_MULT_THREAD ${default LOTTIE2IMG_MULT_THREAD false}
+#if LOTTIE2IMG_MULT_THREAD
+#define LOTTIE2IMG_ASYNC
+#endif
