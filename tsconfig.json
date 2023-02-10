@@ -2,12 +2,13 @@
     "extends": "@tsconfig/node-lts-strictest-esm/tsconfig.json",
     "include": [
         "example/**/*.mts",
-        "src/**/*.ts",
+        "packages/main/src/**/*.ts",
         "test/**/*.mts",
         "**/tsup.config.ts"
     ],
+    "exclude": ["**/dist/**"],
     "compilerOptions": {
         "resolveJsonModule": true,
-        "outDir": "dist",
+        "outDir": "packages/main/src/dist",
     }
 }

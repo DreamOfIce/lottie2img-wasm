@@ -2,7 +2,7 @@
 import { access, readFile, writeFile } from "fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Lottie2img from "lottie2img";
+import Lottie2img from "@lottie2img/main";
 import type { PathLike } from "node:fs";
 
 type convertOptions = Array<[PathLike, PathLike, lottie2imgOptions]>;

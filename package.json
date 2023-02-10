@@ -1,42 +1,23 @@
 {
   "name": "lottie2img",
   "version": "0.1.0",
+  "private": true,
   "description": "Convert lottie/tgs file to animated images(webp/gif)",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "engines": {
-    "node": ">=16"
-  },
-  "exports": {
-    ".": {
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
-    }
-  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "npm-run-all -s build:*",
-    "build:core-mt": "xmake config -m release --thread=mult -y; xmake",
-    "build:core-st": "xmake config -m release --thread=single -y; xmake",
+    "build": "npm-run-all -p build:* -s build-core:*",
+    "build-core:mt": "pnpm --dir=packages/core-mt run build",
+    "build-core:st": "pnpm --dir=packages/core-st run build",
     "build:example": "cd example && tsup",
-    "build:wrapper": "tsup",
+    "build:main": "cd packages/main && tsup",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DreamOfIce/lottie2img-wasm.git"
   },
-  "keywords": [
-    "lottie",
-    "tgs",
-    "webp",
-    "wasm",
-    "webassembly"
-  ],
   "author": "冰雪殇璃陌梦 <admin@dreamofice.cn> (https://www.dreamofice.cn)",
   "license": "MIT",
   "bugs": {

@@ -1,4 +1,4 @@
-import { version } from "../package.json";
+import { version } from "../../../package.json";
 import defaultOptions from "./utils/defaultOptions.js";
 import type {
   lottie2imgCore,

@@ -1,0 +1,24 @@
+{
+  "name": "@lottie2img/core-mt",
+  "version": "0.1.0",
+  "description": "Mult thread core of lottie2img",
+  "main": "dist/core.js",
+  "scripts": {
+    "build": "xmake config -m release --thread=mult --name=core-mt -y; xmake"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DreamOfIce/lottie2img-wasm.git"
+  },
+  "keywords": [
+    "lottie2img",
+    "wasm",
+    "webassembly"
+  ],
+  "author": "冰雪殇璃陌梦 <admin@dreamofice.cn> (https://www.dreamofice.cn)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DreamOfIce/lottie2img-wasm/issues"
+  },
+  "homepage": "https://github.com/DreamOfIce/lottie2img-wasm#readme"
+}

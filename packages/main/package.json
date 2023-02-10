@@ -1,0 +1,38 @@
+{
+  "name": "@lottie2img/main",
+  "version": "0.1.0",
+  "description": "Convert lottie/tgs file to animated images(webp/gif)",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=16"
+  },
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DreamOfIce/lottie2img-wasm.git"
+  },
+  "keywords": [
+    "lottie",
+    "tgs",
+    "webp",
+    "wasm",
+    "webassembly"
+  ],
+  "author": "冰雪殇璃陌梦 <admin@dreamofice.cn> (https://www.dreamofice.cn)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DreamOfIce/lottie2img-wasm/issues"
+  },
+  "homepage": "https://github.com/DreamOfIce/lottie2img-wasm#readme"
+}

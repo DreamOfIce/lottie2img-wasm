@@ -9,6 +9,14 @@ set_defaultplat("wasm")
 set_languages("cxx17")
 
 add_options("thread")
+
+option("name")
+do
+    set_showmenu(true)
+    set_description("Name of the core, used to copy the output to packages/core/packages/$name, left blank to not copied")
+    set_values("core-mt", "core-st")
+end
+
 option("thread")
 do
     set_default("mult")
@@ -36,7 +44,7 @@ else
 end
 
 -- generate config.h
-add_configfiles("core/xmake/config.h.in")
+add_configfiles("packages/core/xmake/config.h.in")
 add_includedirs("$(buildir)")
 set_configvar("LOTTIE2IMG_MULT_THREAD", get_config("thread") == "mult")
 
@@ -49,12 +57,12 @@ set_configvar("LOTTIE_THREAD", get_config("thread") == "mult")
 target("libwebp")
 do
     set_kind("static")
-    add_files("core/third_party/libwebp/src/**.c")
-    add_files("core/third_party/libwebp/sharpyuv/**.c")
+    add_files("packages/core/third_party/libwebp/src/**.c")
+    add_files("packages/core/third_party/libwebp/sharpyuv/**.c")
     add_defines("HAVE_MALLOC_H")
 
-    add_includedirs("core/third_party/libwebp")
-    add_includedirs("core/third_party/libwebp/src", {
+    add_includedirs("packages/core/third_party/libwebp")
+    add_includedirs("packages/core/third_party/libwebp/src", {
         public = true
     })
 end
@@ -63,14 +71,14 @@ end
 target("rlottie")
 do
     set_kind("static")
-    add_files("core/third_party/rlottie/src/lottie/**.cpp")
-    add_files("core/third_party/rlottie/src/vector/**.cpp")
+    add_files("packages/core/third_party/rlottie/src/lottie/**.cpp")
+    add_files("packages/core/third_party/rlottie/src/vector/**.cpp")
 
-    add_includedirs("core/third_party/rlottie/src/vector")
-    add_includedirs("core/third_party/rlottie/src/vector/freetype")
-    add_includedirs("core/third_party/rlottie/src/vector/pixman")
-    add_includedirs("core/third_party/rlottie/src/vector/stb")
-    add_includedirs("core/third_party/rlottie/inc", {
+    add_includedirs("packages/core/third_party/rlottie/src/vector")
+    add_includedirs("packages/core/third_party/rlottie/src/vector/freetype")
+    add_includedirs("packages/core/third_party/rlottie/src/vector/pixman")
+    add_includedirs("packages/core/third_party/rlottie/src/vector/stb")
+    add_includedirs("packages/core/third_party/rlottie/inc", {
         public = true
     })
 end
@@ -79,25 +87,28 @@ end
 target("core")
 do
     set_kind("binary")
-    add_files("core/src/**.cpp")
+    add_files("packages/core/src/**.cpp")
     add_deps("libwebp", "rlottie")
+    set_filename("output/core.js")
     add_packages("zlib")
     add_links("embind")
-    add_ldflags("--post-js core/js/post.js", "-sEXIT_RUNTIME", "-sMODULARIZE", "-sEXPORT_NAME=createLottie2imgCore",
+    add_ldflags("--post-js packages/core/js/post.js", "-sEXIT_RUNTIME", "-sMODULARIZE", "-sEXPORT_NAME=createLottie2imgCore",
         "-sEXPORTED_RUNTIME_METHODS=[addFunction,AsciiToString,ccall,cwrap,getValue]")
     if (is_config("thread", "single")) then
         add_ldflags("-sEXPORTED_FUNCTIONS=[_main,_free,_convert,_malloc,_version]")
-        set_filename("output/single-thread.js")
     else
         add_ldflags("-sEXPORTED_FUNCTIONS=[_main,_free,_convert,_convertAsync,_malloc,_version]")
-        set_filename("output/mult-thread.js")
     end
 
-    -- copy to dist/core
+    -- copy to package dist
     after_build(function(target)
-        if (not os.exists("$(projectdir)/dist/core")) then
-            os.mkdir("$(projectdir)/dist/core")
+        if (has_config("name")) then
+            local package_dir = "packages/$(name)/dist"
+            cprint("${blue}Copy result to " .. package_dir)
+            if (not os.exists(package_dir)) then
+                os.mkdir(package_dir)
+            end
+            os.cp(target:targetdir() .. "/output/*", "$(projectdir)/" .. package_dir)
         end
-        os.cp(target:targetdir() .. "/output/*", "$(projectdir)/dist/core/")
     end)
 end

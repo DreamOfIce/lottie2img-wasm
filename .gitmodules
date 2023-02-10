@@ -1,8 +1,8 @@
-[submodule "core/third_party/rlottie"]
-	path = core/third_party/rlottie
+[submodule "rlottie"]
+	path = packages/core/third_party/rlottie
 	url = https://github.com/Samsung/rlottie.git
 	branch = v0.2
-[submodule "core/third_party/libwebp"]
-	path = core/third_party/libwebp
-	url = http://github.com/webmproject/libwebp
+[submodule "libwebp"]
+	path = packages/core/third_party/libwebp
+	url = https://github.com/webmproject/libwebp.git
 	branch = v1.3.0
