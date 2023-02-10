@@ -231,6 +231,9 @@ class Lottie2img {
    * Destroy wasm instances and free memory
    */
   destroy(): void {
+    this.#taskList.forEach(([, reject]) => {
+      reject("The core has been destroyed!");
+    });
     this.#core.exit(0);
     this.#destroyed = true;
   }
