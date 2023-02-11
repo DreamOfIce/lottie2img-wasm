@@ -9,6 +9,6 @@
     "exclude": ["**/dist/**"],
     "compilerOptions": {
         "resolveJsonModule": true,
-        "outDir": "packages/main/src/dist",
+        "outDir": "packages/main/src/dist"
     }
 }

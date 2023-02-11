@@ -6,5 +6,5 @@ export default defineConfig({
   format: ["cjs", "esm"],
   minify: true,
   shims: true,
-  target: "node16",
+  target: "es2020",
 });
