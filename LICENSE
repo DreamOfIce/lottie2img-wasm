@@ -1,5 +1,21 @@
-MIT License
+1. Overview
+lottie2img itself is licensed under the MIT license, but some of the core dependencies (located in packages/core/third_party) are licensed under (like) the BSD 2/3-Clause license and are packaged together in wasm.
+Therefore, the license field in the package.json of core is BSD-3-Clause
+NOTE: The information listed below is for reference only and may contain errors or be out of date, please refer to the documents in the repository!
 
+2. Details
+lottie2img (MIT License) depends on:
+- libwebp (MIT License)
+- rlottie (MIT License) depends on:
+  - freetype (FreeType License(BSD-3-Clause like))
+  - pixman (MIT License)
+  - stb (MIT License)
+  - rapidjson (MIT License)
+    > The parts of rapidjson that are licensed under the BSD-3-Clause and JSON licenses are not included in the rlottie
+
+3. Copies of licences
+
+3.1 lottie2img
 Copyright (c) 2023 冰雪殇璃陌梦
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,3 +35,56 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+3.2 libwebp
+
+Copyright (c) 2010, Google Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+  * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+
+  * Neither the name of Google nor the names of its contributors may
+    be used to endorse or promote products derived from this software
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+3.3 rlottie
+
+Licensing
+
+rlottie basically comes with MIT license(licenses/COPYING.MIT)
+but some parts of shared code are covered by different licenses. Listed
+below are the folder names and the license file covering it. Note that this
+license would cover all of the source invovled in each folders, unless
+specifically noted otherwise. So please refer to these imported project sources
+for details.
+
+Dependencies and licenses:
+
+src/vector/                    licenses/COPYING.MIT, COPYING.SKIA
+src/vector/freetype            licenses/COPYING.FTL
+src/vector/pixman              licenses/COPYING.PIX
+src/vector/stb                 licenses/COPYING.STB
+src/lottie/rapidjson           licenses/COPYING.RPD

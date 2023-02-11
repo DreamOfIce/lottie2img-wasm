@@ -16,7 +16,7 @@
     "webassembly"
   ],
   "author": "冰雪殇璃陌梦 <admin@dreamofice.cn> (https://www.dreamofice.cn)",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "bugs": {
     "url": "https://github.com/DreamOfIce/lottie2img-wasm/issues"
   },
