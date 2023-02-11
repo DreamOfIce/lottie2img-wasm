@@ -79,7 +79,9 @@ jobs:
   #        run: pnpm test
 
   publish:
+    name: Publish to NPM
     runs-on: ubuntu-latest
+    needs: [build]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -90,7 +92,7 @@ jobs:
           name: build-result
           path: ~/packages/
 
-      - name: Publish to registry
+      - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: pnpm publish
