@@ -28,8 +28,8 @@ importers:
 
   example:
     specifiers:
-      '@lottie2img/core-mt': workspace:core-mt
-      '@lottie2img/main': workspace:main
+      '@lottie2img/core-mt': workspace:*
+      '@lottie2img/main': workspace:*
     devDependencies:
       '@lottie2img/core-mt': link:../packages/core-mt
       '@lottie2img/main': link:../packages/main
