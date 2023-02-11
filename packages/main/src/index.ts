@@ -20,7 +20,7 @@ class Lottie2img {
     options: Required<lottie2imgInitOptions>
   ) {
     this.#core = core;
-    this.#hasAsync = this.#core.haveAsync;
+    this.#haveAsync = this.#core.haveAsync;
     this.#logger = options.log
       ? options.logger
       : () => {
@@ -44,39 +44,52 @@ class Lottie2img {
     const versionPtr = this.#core.ccall("version", "number", [], []);
     this.version = {
       wrapper: version,
-      ...JSON.parse(this.#core.AsciiToString(versionPtr)),
+      ...JSON.parse(this.#core.UTF8ToString(versionPtr)),
     } as lottie2imgVersion;
-  }
-  #destroyed = false;
-  #taskList: Map<symbol, [(value: number) => void, (reason: string) => void]> =
-    new Map();
-  static format = lottie2imgOutputFormats;
-  #callback(handle: symbol, ptr: number): void {
-    const task = this.#taskList.get(handle);
-    if (!task) throw new Error(`Handle ${handle.toString()} does not exisit!`);
-    const [resolve, reject] = task;
-    if (ptr === 0) {
-      reject("Convert failed!");
-    }
-    resolve(ptr);
   }
 
   #core: lottie2imgCore;
-  #hasAsync: boolean;
+  #destroyed = false;
+  static format = lottie2imgOutputFormats;
+  #haveAsync: boolean;
   #logger: lottie2imgLogger;
+  #taskList: Map<symbol, [(value: number) => void, (reason: string) => void]> =
+    new Map();
   version: lottie2imgVersion;
+
+  #callback(handle: symbol, errorPtrPtr: number, result: number): void {
+    const errorPtr = this.#core.getValue(errorPtrPtr, "i32");
+    this.#core._free(errorPtrPtr);
+    let message = "";
+    if (errorPtr) {
+      message = this.#core.UTF8ToString(errorPtr);
+      this.#core._free(errorPtr);
+    }
+    const task = this.#taskList.get(handle);
+    this.#taskList.delete(handle);
+    if (!task) throw new Error(`Handle ${handle.toString()} does not exisit!`);
+    const [resolve, reject] = task;
+    if (result === 0) {
+      reject(`Convert failed: ${message}`);
+    }
+    resolve(result);
+  }
+
   #callConvert: (
     args: string,
     inputPointer: number,
     inputLength: number,
-    outputLengthPointer: number
+    outputLengthPointer: number,
+    errorPointersPointer: number
   ) => number;
+
   #callConvertAsync: (
     args: string,
     inputPointer: number,
     inputLength: number,
     outputLengthPointer: number,
-    callbackPointer: number
+    callbackPointer: number,
+    errorPointersPointer: number
   ) => boolean;
 
   /**
@@ -88,20 +101,20 @@ class Lottie2img {
     const options = { ...defaultOptions, ...opt };
     const coreOptions = {
       noExitRuntime: true,
+      print: () => {
+        // do nothing
+      },
+      printErr: () => {
+        // do nothing
+      },
     };
     if (options.log) {
       Object.assign(coreOptions, {
         print: (message: string) => options.logger("info", message),
-        printErr: (message: string) => options.logger("error", message),
-      });
-    } else {
-      Object.assign(coreOptions, {
-        print: () => {
-          // do nothing
-        },
-        printErr: () => {
-          // do nothing
-        },
+        printErr: (message: string) =>
+          message.startsWith("[warn]")
+            ? options.logger("warn", message.slice(6))
+            : options.logger("error", message),
       });
     }
     const { default: createCore } = (await import(options.core)) as {
@@ -109,6 +122,17 @@ class Lottie2img {
     };
     return new Lottie2img(await createCore(coreOptions), options);
   }
+
+  /**
+   * Convert options to string
+   * @param options lottie2img options
+   * @returns string in key=value format, split with ';'
+   */
+  static #optionToString = (options: lottie2imgOptions): string =>
+    Object.entries(options)
+      .filter(([, value]) => value !== undefined)
+      .map(([key, value]) => `${key}=${value as string}`)
+      .join(";");
 
   /**
    * Convert Lottie to an image. Note that you cannot call this function after calling distory()
@@ -123,29 +147,28 @@ class Lottie2img {
   ): Promise<Uint8Array> {
     if (this.#destroyed) {
       throw new Error("Cannot be called after destroy!");
-    } else if (!this.#hasAsync) {
+    } else if (!this.#haveAsync) {
       this.#logger(
-        "error",
-        "[WARNING] This core does not support async convert,  run sync version instead"
+        "warn",
+        "This core does not support async convert,  run sync version instead"
       );
-      return Promise.resolve(this.convertSync(input, options));
+      return this.convertSync(input, options);
     }
     const handle = Symbol("lottie2img convert task");
-    let inputPtr: number | undefined,
+    let errorPtr: number | undefined,
+      inputPtr: number | undefined,
       outputPtr: number | undefined,
       outputLengthPtr: number | undefined,
       callbackPtr: number | undefined;
     try {
       const inputLength = input.length * input.BYTES_PER_ELEMENT;
       inputPtr = this.#core._malloc(inputLength);
-      outputLengthPtr = this.#core._malloc(4); // size_t
+      errorPtr = this.#core._malloc(4); // char **
+      outputLengthPtr = this.#core._malloc(4); // size_t *
       this.#core.HEAPU8.set(input, inputPtr);
-      const optstr = Object.entries(options)
-        .filter(([, value]) => value !== undefined)
-        .map(([key, value]) => `${key}=${value as string}`)
-        .join(";");
+      const optstr = Lottie2img.#optionToString(options);
       callbackPtr = this.#core.addFunction(
-        this.#callback.bind(this, handle),
+        this.#callback.bind(this, handle, errorPtr),
         "vi"
       );
       const convertPromise = new Promise(
@@ -159,7 +182,8 @@ class Lottie2img {
             inputPtr as number,
             inputLength,
             outputLengthPtr as number,
-            callbackPtr as number
+            callbackPtr as number,
+            errorPtr as number
           );
           if (!result)
             reject(
@@ -178,6 +202,7 @@ class Lottie2img {
       throw err;
     } finally {
       // Ensure that requested memory is freed
+      if (errorPtr) this.#core._free(errorPtr);
       if (inputPtr) this.#core._free(inputPtr);
       if (outputPtr) this.#core._free(outputPtr);
       if (outputLengthPtr) this.#core._free(outputLengthPtr);
@@ -192,21 +217,20 @@ class Lottie2img {
    */
   convertSync(input: Uint8Array, options: lottie2imgOptions = {}): Uint8Array {
     if (!this.#destroyed) {
-      let inputPtr, outputPtr, outputLengthPtr;
+      let errorPtr, inputPtr, outputPtr, outputLengthPtr;
       try {
         const inputLength = input.length * input.BYTES_PER_ELEMENT;
         inputPtr = this.#core._malloc(inputLength);
-        outputLengthPtr = this.#core._malloc(4); // int
+        errorPtr = this.#core._malloc(4); // char **
+        outputLengthPtr = this.#core._malloc(4); // size_t *
         this.#core.HEAPU8.set(input, inputPtr);
-        const optstr = Object.entries(options)
-          .filter(([, value]) => value !== undefined)
-          .map(([key, value]) => `${key}=${value as string}`)
-          .join(";");
+        const optstr = Lottie2img.#optionToString(options);
         outputPtr = this.#callConvert(
           optstr,
           inputPtr,
           inputLength,
-          outputLengthPtr
+          outputLengthPtr,
+          errorPtr
         );
         const outputLength = this.#core.getValue(outputLengthPtr, "i32");
         const result = new Uint8Array(
@@ -221,6 +245,7 @@ class Lottie2img {
         if (inputPtr) this.#core._free(inputPtr);
         if (outputPtr) this.#core._free(outputPtr);
         if (outputLengthPtr) this.#core._free(outputLengthPtr);
+        if (errorPtr) this.#core._free(errorPtr);
       }
     } else {
       throw new Error("Cannot be called after destroy!");

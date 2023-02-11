@@ -7,8 +7,9 @@
 #include "encoder/webp.h"
 #include "webp/encode.h"
 #include "webp/mux.h"
+#include "utils.h"
 
-uint8_t *render(std::string *lottieJson, renderOptions *options, size_t *outputLength)
+uint8_t *render(std::string *lottieJson, renderOptions *options, size_t *outputLength, char **errorPtr)
 {
   std::cout << "Initializing rlottie..." << std::endl;
   auto animation = rlottie::Animation::loadFromData(*lottieJson, "", "", false);
@@ -63,7 +64,7 @@ uint8_t *render(std::string *lottieJson, renderOptions *options, size_t *outputL
     encoder = std::unique_ptr<Lottie2imgEncoder>(new Lottie2imgWebPEncoder(options, imgWidth, imgHeight, duration));
     break;
   default:
-    std::cerr << "Unknown output format " << options->format << std::endl;
+    writeError(errorPtr, "Unknown output format" + std::to_string(options->format));
     return 0;
   }
 
@@ -79,6 +80,7 @@ uint8_t *render(std::string *lottieJson, renderOptions *options, size_t *outputL
     // add to encoder
     if (!encoder->add(&surface, duration * 1000 / imgTotalFrame * i))
     {
+      writeError(errorPtr, "Failed to add " + std::to_string(i) + "th frame ");
       return 0;
     }
   }

@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <iostream>
+#include <cstring>
 
 using namespace std;
 
@@ -11,12 +12,19 @@ string convertVersion(int version)
   return to_string(major) + '.' + to_string(minor) + '.' + std::to_string(patch);
 }
 
+void writeError(char **errorPtr, std::string message)
+{
+  auto ptr = (char *)malloc(message.length() + 1);
+  memcpy(ptr, message.data(), message.length() + 1);
+  *errorPtr = ptr;
+}
+
 bool isGzip(uint8_t *input, size_t inputLength)
 {
   return inputLength > 2 && input[0] == 0x1F && input[1] == 0x8B;
 }
 
-string decompressGzip(uint8_t *input, size_t inputLength)
+string decompressGzip(uint8_t *input, size_t inputLength, char **errorPtr)
 {
   string result;
   const size_t bufferLength = inputLength * 2 < 131072l ? 131072l : inputLength * 2; // min buufer size 128k
@@ -40,8 +48,8 @@ string decompressGzip(uint8_t *input, size_t inputLength)
     code = inflate(&zs, Z_NO_FLUSH);
     if (code != Z_OK && code != Z_STREAM_END)
     {
-      cerr << "Could not decompress the lottie file: " << zs.msg << '(' << code << ")." << endl;
-      throw runtime_error("zlib failed with " + string(zs.msg));
+      writeError(errorPtr, "Could not decompress data: zlib failed with " + string(zs.msg) + "(" + std::to_string(code) + ")");
+      return 0;
     }
     result += string((char *)buffer.get(), bufferLength - zs.avail_out);
     zs.next_out = buffer.get();
@@ -52,7 +60,7 @@ string decompressGzip(uint8_t *input, size_t inputLength)
   return result;
 }
 
-renderOptions parseArg(string argstr)
+renderOptions parseArg(string argstr, char **errorPtr)
 {
   renderOptions options;
   if (argstr.length() == 0)
@@ -67,8 +75,8 @@ renderOptions parseArg(string argstr)
     int eqPos = arg.find('=');
     if (eqPos == string::npos)
     {
-      cerr << "Bad argument: " << arg << endl;
-      throw "Bad argument: " + arg;
+      writeError(errorPtr, "Bad argument: " + arg);
+      break;
     }
     string key = arg.substr(0, eqPos);
     string value = arg.substr(eqPos + 1);
@@ -111,7 +119,7 @@ renderOptions parseArg(string argstr)
     }
     else
     {
-      cerr << "[Warning] Unknow argument: " << arg << ", ignored." << endl;
+      cerr << "[warn] Unknow argument: " << arg << ", ignored." << endl;
     }
     pos = argstr.find(';');
   }

@@ -30,4 +30,4 @@ struct renderOptions
 /*
   render lottie json to webp
 */
-uint8_t *render(std::string *lottieJson, renderOptions *options, size_t *outputLength);
+uint8_t *render(std::string *lottieJson, renderOptions *options, size_t *outputLength, char **errorPtr);

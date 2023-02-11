@@ -18,7 +18,7 @@ Lottie2imgWebPEncoder::Lottie2imgWebPEncoder(renderOptions *options, size_t widt
   if (!WebPValidateConfig(&config))
   {
     std::cerr << "Invalid WebP config" << std::endl;
-    throw std::invalid_argument("Invalid config");
+    throw std::invalid_argument("Invalid WebP config");
   }
 
   // Init WebP picture
