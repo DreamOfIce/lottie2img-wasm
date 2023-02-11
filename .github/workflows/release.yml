@@ -1,0 +1,96 @@
+name: Publish
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    name: Build and publish to NPM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v12
+        with:
+          version: latest
+          actions-cache-folder: ".emsdk-cache"
+
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+          actions-cache-folder: ".xmake-cache"
+
+      - uses: actions/setup-node@v3
+        with:
+          registry-url: https://registry.npmjs.org/
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          run_install: true
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Upload artifact
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-result
+          path: ~/packages/*/dist/
+
+  # --- Comming soon ---
+
+  #  test:
+  #    name: Test on node ${{ matrix.node_version }} and ${{ matrix.os }}
+  #    needs: [build]
+  #    runs-on: ${{ matrix.os }}
+  #    strategy:
+  #      matrix:
+  #        node_version: ["18", "16"]
+  #        os: [ubuntu-latest]
+  #
+  #    steps:
+  #      - name: Checkout
+  #        uses: actions/checkout@v3
+  #
+  #      - name: Download build result
+  #        uses: actions/download-artifact@v3
+  #        with:
+  #          name: build-result
+  #          path: ~/packages/
+  #
+  #      - name: Setup Node.js ${{ matrix.node_version }}
+  #        uses: actions/setup-node@v3
+  #        with:
+  #          node-version: ${{ matrix.node_version }}
+  #
+  #      - name: Setup pnpm
+  #        uses: pnpm/action-setup@v2
+  #        with:
+  #          version: 7.x
+  #          run_install: true
+  #
+  #      - name: Run tests
+  #        run: pnpm test
+
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download build result
+        uses: actions/download-artifact@v3
+        with:
+          name: build-result
+          path: ~/packages/
+
+      - name: Publish to registry
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm publish
