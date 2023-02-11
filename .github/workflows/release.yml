@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Build and publish to NPM
+    name: Build packages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,16 +24,13 @@ jobs:
           xmake-version: latest
           actions-cache-folder: ".xmake-cache"
 
-      - uses: actions/setup-node@v3
-        with:
-          registry-url: https://registry.npmjs.org/
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
+          version: 7.x
           run_install: true
 
-      - name: Build
+      - name: Build packages
         run: pnpm run build
 
       - name: Upload artifact
