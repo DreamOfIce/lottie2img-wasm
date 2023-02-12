@@ -40,7 +40,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: build-result
-          path: ~/packages/*/dist/
+          path: packages/*/dist/
 
   # --- Comming soon ---
 
@@ -61,7 +61,7 @@ jobs:
   #        uses: actions/download-artifact@v3
   #        with:
   #          name: build-result
-  #          path: ~/packages/
+  #          path: packages/
   #
   #      - name: Setup Node.js ${{ matrix.node_version }}
   #        uses: actions/setup-node@v3
@@ -89,7 +89,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: build-result
-          path: ~/packages/
+          path: packages/
 
       - name: Publish
         env:
