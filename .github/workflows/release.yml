@@ -93,7 +93,8 @@ jobs:
 
       - name: Setup Node.js 
         uses: actions/setup-node@v3 
-        with: 
+        with:
+          registry-url: https://registry.npmjs.org/ 
           node-version: 18
  
       - name: Setup pnpm 
@@ -105,4 +106,4 @@ jobs:
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm publish --no-git-checks
+        run: pnpm publish -r --no-git-checks
