@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/DreamOfIce/lottie2img-wasm/issues"
   },
-  "homepage": "https://github.com/DreamOfIce/lottie2img-wasm#readme"
+  "homepage": "https://github.com/DreamOfIce/lottie2img-wasm#readme",
+  "publishConfig": {
+    "access": "public"
+  }
 }
