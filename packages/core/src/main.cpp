@@ -35,6 +35,7 @@ extern "C"
     cout << "lottie2img-core v" << LOTTIE2IMG_VERSION << endl;
     cout << "mult thread: " << boolalpha << LOTTIE2IMG_MULT_THREAD << endl;
     cout << "WebP format support: " << LOTTIE2IMG_FORMAT_WEBP << endl;
+    cout << "GIF format support: " << LOTTIE2IMG_FORMAT_GIF << endl;
     cout << noboolalpha << endl;
     return 0;
   }
@@ -50,6 +51,7 @@ extern "C"
   */
   uint8_t *convert(char *args, uint8_t *input, size_t inputLength, size_t *outputLength, char **errorPtr)
   {
+    cout << args << endl;
     renderOptions options = parseArg(std::string(args), errorPtr);
     if (*errorPtr != nullptr)
       return 0;

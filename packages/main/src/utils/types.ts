@@ -23,7 +23,7 @@ interface lottie2imgInitOptions {
 
 enum lottie2imgOutputFormats {
   WEBP,
-  // GIF,
+  GIF,
 }
 
 interface lottie2imgOptions {

@@ -13,10 +13,18 @@ const currentDir = dirname(fileURLToPath(import.meta.url));
 const resourceDir = join(currentDir, "..", "..", "resource");
 const outputDir = join(currentDir, "..", "output");
 const exampleFiles: convertOptions = [
-  [join(resourceDir, "cherry.tgs"), join(outputDir, "cherry.webp"), {}],
+  [
+    join(resourceDir, "cherry.tgs"),
+    join(outputDir, "cherry.gif"),
+    { format: Lottie2img.format.GIF },
+  ],
   [join(resourceDir, "duck.tgs"), join(outputDir, "duck.webp"), {}],
   [join(resourceDir, "confetti.json"), join(outputDir, "confetti.webp"), {}],
-  [join(resourceDir, "gradient.json"), join(outputDir, "gradient.webp"), {}],
+  [
+    join(resourceDir, "gradient.json"),
+    join(outputDir, "gradient.webp"),
+    { width: 1280, height: 720 },
+  ],
 ];
 
 // parse arguments
@@ -24,6 +32,7 @@ const args = process.argv.slice(2);
 if (args.length === 0) {
   console.log("No argument specified, using sample resources!");
   await convert(exampleFiles);
+  console.log(`Results have been saved to ${outputDir}.`);
 } else if (args.includes("-v") || args.includes("--version")) {
   await printVersion();
 } else if (args.includes("-h") || args.includes("--help")) {
@@ -83,7 +92,7 @@ function printHelp(): void {
   console.log("  -v  --version    print version in and exit.");
 
   console.log("Convert options:");
-  console.log("  --format [webp]            output format");
+  console.log("  --format [webp|gif]            output format");
   console.log("  --frame-rate [int]         frames per second");
   console.log("  --height [int]             height of output image");
   console.log("  --width [int]              width of output image");
@@ -175,21 +184,22 @@ function parseOptions(args: Array<string>): lottie2imgOptions {
         .slice(2)
         .replace(/-([a-z])/gi, (m) => m.substring(1).toUpperCase());
       let value;
-      if (key == "format" && typeof value === "string") {
+      if (key == "format" && typeof valueStr === "string") {
         const format = (
           Lottie2img.format as unknown as Record<
             string,
             lottie2imgOutputFormats
           >
         )[valueStr.toUpperCase()];
-        if (!format) throw new Error(`Unsupport output format :${value}`);
+        if (format === undefined)
+          throw new Error(`Unsupport output format :${valueStr}`);
         options.format = format;
       } else {
         value = parseValue(valueStr);
+        Object.assign(options, {
+          [key]: value,
+        });
       }
-      Object.assign(options, {
-        [key]: value,
-      });
     } else if (ignoreFields.includes(arg)) {
       ++i;
     } else {

@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include "encoder/encoder.h"
+#include "encoder/gif.h"
 #include "encoder/webp.h"
 #include "webp/encode.h"
 #include "webp/mux.h"
@@ -63,11 +64,13 @@ uint8_t *render(std::string *lottieJson, renderOptions *options, size_t *outputL
   case FORMAT_WEBP:
     encoder = std::unique_ptr<Lottie2imgEncoder>(new Lottie2imgWebPEncoder(options, imgWidth, imgHeight, duration));
     break;
+  case FORMAT_GIF:
+    encoder = std::unique_ptr<Lottie2imgEncoder>(new Lottie2imgGifEncoder(options, imgWidth, imgHeight, duration, imgTotalFrame));
+    break;
   default:
     writeError(errorPtr, "Unknown output format" + std::to_string(options->format));
     return 0;
   }
-
   auto buffer = std::unique_ptr<uint32_t[]>(new uint32_t[imgHeight * imgWidth]);
   rlottie::Surface surface(buffer.get(), imgWidth, imgHeight, imgWidth * 4);
 

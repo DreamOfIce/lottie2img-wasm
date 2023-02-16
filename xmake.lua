@@ -53,6 +53,16 @@ set_configvar("LOTTIE_CACHE", 0)
 set_configvar("LOTTIE_MODULE", 0)
 set_configvar("LOTTIE_THREAD", get_config("thread") == "mult")
 
+-- build gifencoder
+target("gifencoder")
+do
+    set_kind("static")
+    add_files("packages/core/third_party/gifencoder/egif/**.cpp")
+    add_includedirs("packages/core/third_party/gifencoder/egif",{
+        public = true
+    })
+end
+
 -- build libwebp
 target("libwebp")
 do
@@ -88,12 +98,12 @@ target("core")
 do
     set_kind("binary")
     add_files("packages/core/src/**.cpp")
-    add_deps("libwebp", "rlottie")
+    add_deps("gifencoder", "libwebp", "rlottie")
     set_filename("output/core.js")
     add_packages("zlib")
     add_links("embind")
     add_ldflags("--post-js packages/core/js/post.js", "-sEXIT_RUNTIME", "-sMODULARIZE", "-sEXPORT_NAME=createLottie2imgCore",
-        "-sEXPORTED_RUNTIME_METHODS=[addFunction,AsciiToString,ccall,cwrap,getValue]")
+        "-sEXPORTED_RUNTIME_METHODS=[addFunction,UTF8ToString,ccall,cwrap,getValue]")
     if (is_config("thread", "single")) then
         add_ldflags("-sEXPORTED_FUNCTIONS=[_main,_free,_convert,_malloc,_version]")
     else

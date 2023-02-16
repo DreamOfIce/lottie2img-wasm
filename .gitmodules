@@ -6,3 +6,6 @@
 	path = packages/core/third_party/rlottie
 	url = https://github.com/Samsung/rlottie.git
 	branch = v0.2
+[submodule "gifencoder"]
+	path = packages/core/third_party/gifencoder
+	url = https://github.com/DreamOfIce/GifEncoder.git

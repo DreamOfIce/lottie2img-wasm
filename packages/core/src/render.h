@@ -8,7 +8,7 @@
 enum outputFormat
 {
   FORMAT_WEBP,
-  // FORMAT_GIF // comming soon
+  FORMAT_GIF
 };
 
 /*
