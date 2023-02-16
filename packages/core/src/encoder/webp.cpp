@@ -5,7 +5,7 @@ Lottie2imgWebPEncoder::Lottie2imgWebPEncoder(renderOptions *options, size_t widt
 {
   // Init WebP encoder
   WebPAnimEncoderOptionsInit(&encOptions);
-  encParams.bgcolor = options->backgroundColor >> 2 | (options->backgroundColor & 0xFF) << 6;
+  encParams.bgcolor = options->backgroundColor >> 8 | (options->backgroundColor & 0xFF) << 24;
   encParams.loop_count = options->loop;
   encOptions.anim_params = encParams;
   encOptions.minimize_size = options->minimizeSize;
