@@ -6,7 +6,7 @@
 
 Lottie2imgGifEncoder::Lottie2imgGifEncoder(renderOptions *options, size_t width, size_t height, double duration, size_t totalFrames)
 {
-  if (!encoder.open(&(this->resultPtr), &resultLength, width, height, std::max(1, (int)(30 - options->quality * 0.3)), true, (int16_t)options->loop, width * height * 3 * totalFrames))
+  if (!encoder.open(&(this->resultPtr), &resultLength, width, height, std::max(1, (int)(30 - options->quality * 0.3)), true, options->loop, width * height * 3 * totalFrames))
   {
     std::cerr << "Error opening gif encoder" << std::endl;
     throw std::runtime_error("Error opening gif encoder");
@@ -26,13 +26,12 @@ bool Lottie2imgGifEncoder::add(rlottie::Surface *surface, int timestamp)
   auto src = (uint8_t *)surface->buffer();
   for (const uint8_t *dstEnd = dest + frameSize; dest < dstEnd; src += 4)
   {
-    double alpha = *src / 255.0;
-    double alpha2 = 1 - alpha;
+    double alpha = *(src + 3) / 255.0;
     if (alpha == 1)
     {
-      *(dest++) = *(src + 3);
-      *(dest++) = *(src + 2);
+      *(dest++) = *src;
       *(dest++) = *(src + 1);
+      *(dest++) = *(src + 2);
     }
     else if (alpha == 0)
     {
@@ -41,9 +40,10 @@ bool Lottie2imgGifEncoder::add(rlottie::Surface *surface, int timestamp)
     }
     else
     {
-      *(dest++) = *(src + 3) * alpha + this->backgroundColor[2] * alpha2;
-      *(dest++) = *(src + 2) * alpha + this->backgroundColor[1] * alpha2;
-      *(dest++) = *(src + 1) * alpha + this->backgroundColor[0] * alpha2;
+      double alpha2 = 1 - alpha;
+      *(dest++) = *src * alpha + this->backgroundColor[0] * alpha2;
+      *(dest++) = *(src + 1) * alpha + this->backgroundColor[1] * alpha2;
+      *(dest++) = *(src + 2) * alpha + this->backgroundColor[2] * alpha2;
     }
   }
   if (!encoder.push(GifEncoder::PIXEL_FORMAT_BGR, frame.get(), width, height, (int)(timePerFrame * currentFrame) - (int)(timePerFrame * (currentFrame - 1))))
